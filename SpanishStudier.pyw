@@ -43,64 +43,52 @@ def inCenter(row):
         center(row, var)
         flush()
     return var
+def menu(row, options):
+    optionsLen = 0
+    for option in options:
+        optionsLen += len(option)
+    spacing = ((conWidth-optionsLen)/2)/2
+    optionStr = ''
+    answer = 0
+    def makeStr():
+        optionStr = ''
+        for option in options:
+            if options[answer] == option:
+                optionStr += '>'
+            else:
+                optionStr += ' '
+            optionStr += option
+            if option != options[len(options)-1]:
+                optionStr += (' '*int(spacing))
+        return optionStr
+    while 1:
+        center(25, makeStr())
+        flush()
+        k = tdl.event.key_wait()
+        if k.key == 'LEFT':
+            answer -= 1
+        elif k.key == 'RIGHT':
+            answer += 1
+        elif k.key == 'ENTER':
+            return options[answer]
+        answer %= len(options)
+
 def main():
     con.clear()
     correct = 0
     center(15, 'Set first terms to Spanish or English?')
-    center(25, 'Spanish               English')
-    con.draw_str(24, 25, '>')
-    flush()
-    answer = 1
-    while 1:
-        k = tdl.event.key_wait()
-        if k.key == 'LEFT':
-            answer -= 1
-        elif k.key == 'RIGHT':
-            answer += 1
-        elif k.key == 'ENTER':
-            if answer == 1:
-                isSpanish = True
-                questions = list(vocab)
-            else:
-                isSpanish = False
-                questions = list(vocab.values())
-            break
-        answer %= 2
-        if answer == 1:
-            con.draw_str(46, 25, ' ')
-            con.draw_str(24, 25, '>')
-        else:
-            con.draw_str(24, 25, ' ')
-            con.draw_str(46, 25, '>')
-        flush()
+    isSpanish = menu(25, ['Spanish', 'English'])
+    if isSpanish == 'Spanish':
+        isSpanish = True
+        questions = list(vocab)
+    else:
+        isSpanish = False
+        questions = list(vocab.values())
     con.clear()
     flush()
     center(15, 'Randomize vocab?')
-    center(25, 'Yes         No')
-    con.draw_str(32, 25, '>')
-    flush()
-    answer = 1
-    while 1:
-        k = tdl.event.key_wait()
-        if k.key == 'LEFT':
-            answer -= 1
-        elif k.key == 'RIGHT':
-            answer += 1
-        elif k.key == 'ENTER':
-            if answer == 1:
-                mix = True
-            else:
-                mix = False
-            break
-        answer %= 2
-        if answer == 1:
-            con.draw_str(44, 25, ' ')
-            con.draw_str(32, 25, '>')
-        else:
-            con.draw_str(32, 25, ' ')
-            con.draw_str(44, 25, '>')
-        flush()
-    if mix:
+    mix = menu(25, ['yes', 'no'])
+    if mix == 'yes':
         random.shuffle(questions)
     con.clear()
     flush()
@@ -130,31 +118,9 @@ def main():
     center(30, 'you got ' + str(correct) + ' correct out of ' + str(len(vocab)))
     con.clear()
     center(15, 'practice again?')
-    center(25, 'yes         no')
-    con.draw_str(32, 25, '>')
+    again = menu(25, ['yes', 'no'])
     flush()
-    answer = 1
-    while 1:
-        k = tdl.event.key_wait()
-        if k.key == 'LEFT':
-            answer -= 1
-        elif k.key == 'RIGHT':
-            answer += 1
-        elif k.key == 'ENTER':
-            if answer == 1:
-                again = True
-            else:
-                again = False
-            break
-        answer %= 2
-        if answer == 1:
-            con.draw_str(44, 25, ' ')
-            con.draw_str(32, 25, '>')
-        else:
-            con.draw_str(32, 25, ' ')
-            con.draw_str(44, 25, '>')
-        flush()
-    if again:
+    if again == 'yes':
         main()
     else:
         os._exit(1)
@@ -181,5 +147,4 @@ def isFull():
     if k.key == "ESCAPE":
         tdl.set_fullscreen(not tdl.get_fullscreen())
 isDead()
-while not tdl.event.is_window_closed():
-    start()
+start()
