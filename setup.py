@@ -2,7 +2,7 @@ import sys
 import os
 from cx_Freeze import setup, Executable
 
-build_exe_options = {"packages": ["tdl", "_cffi_backend", "threading"]}
+build_exe_options = {"packages": ["tdl", "_cffi_backend", "threading", "speech_recognition"]}
 os.environ['TCL_LIBRARY'] = r'C:\\Users\\harri\\AppData\\Local\\Programs\\Python\\Python36-32\\tcl\\tcl8.6'
 os.environ['TK_LIBRARY'] = r'C:\\Users\\harri\\AppData\\Local\\Programs\\Python\\Python36-32\\tcl\\tk8.6'
 

@@ -1,4 +1,4 @@
-import tdl, threading, random, json, os, sys, numpy.core._methods, numpy.lib.format, tkinter as tk
+import tdl, threading, random, json, os, sys, numpy.core._methods, numpy.lib.format, tkinter as tk, speech_recognition as sr
 from tdl import flush
 from tkinter import filedialog
 root = tk.Tk()
@@ -9,6 +9,7 @@ con = tdl.init(conWidth, conHeight, title="Spanish Studier", fullscreen=False)
 flush()
 lower = 'abcdefghijklmnopqrstuvwxyz'
 upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+r = sr.Recognizer()
 vocab = {}
 if getattr(sys, 'frozen', False):
     dir_ = os.path.dirname(sys.executable)
@@ -82,17 +83,33 @@ def main():
         con.clear()
         center(15, i)
         flush()
-        answer = inCenter(25)
+        def getAnswer():
+            with sr.Microphone() as source:
+                center(20, 'listening...')
+                flush()
+                audio = r.listen(source)
+            return audio
+        if not settingsJson['voice']:
+            answer = inCenter(25)
+        else:
+            audio = getAnswer()
+            try:
+                answer = r.recognize_google(audio)
+                center(25, answer)
+            except sr.UnknownValueError:
+                getAnswer()
         flush()
         if settingsJson['isSpanish']:
             if answer == vocab[i]:
                 center(30, 'correct')
+                center(20, '                 ')
                 correct += 1
             else:
                 center(30, 'the correct answer was "' + vocab[i] + '"')
         else:
             if answer == list(vocab.keys())[list(vocab.values()).index(i)]:
                 center(30, 'correct')
+                center(20, '                 ')
                 correct += 1
             else:
                 center(30, 'the correct answer was "' + list(vocab.keys())[list(vocab.values()).index(i)] + '"')
