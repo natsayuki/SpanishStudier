@@ -1,9 +1,13 @@
-import random
 import tdl
+import threading
+import random
 import json
 import os
-from tdl import flush
+import sys
+import numpy.core._methods
+import numpy.lib.format
 import tkinter as tk
+from tdl import flush
 from tkinter import filedialog
 root = tk.Tk()
 root.withdraw()
@@ -14,6 +18,13 @@ flush()
 lower = 'abcdefghijklmnopqrstuvwxyz'
 upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 vocab = {'el aire puro': 'clean air', 'el basurero': 'garbage container', 'la bioversidad': 'biodiversity', 'la capa de ozono': 'ozone layer', 'el clima': 'climate', 'la contaminacion': 'pollution'}
+if getattr(sys, 'frozen', False):
+    # frozen
+    dir_ = os.path.dirname(sys.executable)
+else:
+    # unfrozen
+    dir_ = os.path.dirname(os.path.realpath(__file__))
+
 def center(row, text):
     con.draw_str(((conWidth/2)-(len(text)/2)), row, text)
 def inCenter(row):
@@ -145,13 +156,30 @@ def main():
         flush()
     if again:
         main()
-center(25, "press ctrl+o to choose a voacb file")
-flush()
-while 1:
+    else:
+        os._exit(1)
+def start():
+    center(25, "press ctrl+o to choose a voacb file")
+    flush()
+    while 1:
+        k = tdl.event.key_wait()
+        if k.keychar == 'o' and k.control:
+            file = filedialog.askopenfilename(initialdir = os.path.realpath(dir_)+'/VocabLists', title = "Select vocab", filetypes = (("vocab files", '*.vocab'), ('json files', '*.json'), ('all files', '*.*')))
+
+            if file == '':
+                start()
+            with open(file) as json_file:
+                vocab = json.load(json_file)
+            main()
+def isDead():
+    threading.Timer(.01, isDead).start()
+    if tdl.event.is_window_closed():
+        os._exit(1)
+def isFull():
+    threading.Timer(.01, isFull).start()
     k = tdl.event.key_wait()
-    if k.keychar == 'o' and k.control:
-        file = filedialog.askopenfilename(initialdir = os.path.realpath(__file__)+'/VocabLists', title = "Select vocab", filetypes = (("vocab files", '*.vocab'), ('json files', '*.json'), ('all files', '*.*')))
-        with open(file) as json_file:
-            vocab = json.load(json_file)
-        main()
-main()
+    if k.key == "ESCAPE":
+        tdl.set_fullscreen(not tdl.get_fullscreen())
+isDead()
+while not tdl.event.is_window_closed():
+    start()
