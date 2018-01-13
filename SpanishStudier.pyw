@@ -1,12 +1,4 @@
-import tdl
-import threading
-import random
-import json
-import os
-import sys
-import numpy.core._methods
-import numpy.lib.format
-import tkinter as tk
+import tdl, threading, random, json, os, sys, numpy.core._methods, numpy.lib.format, tkinter as tk
 from tdl import flush
 from tkinter import filedialog
 root = tk.Tk()
@@ -17,13 +9,18 @@ con = tdl.init(conWidth, conHeight, title="Spanish Studier", fullscreen=False)
 flush()
 lower = 'abcdefghijklmnopqrstuvwxyz'
 upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-vocab = {'el aire puro': 'clean air', 'el basurero': 'garbage container', 'la bioversidad': 'biodiversity', 'la capa de ozono': 'ozone layer', 'el clima': 'climate', 'la contaminacion': 'pollution'}
+vocab = {}
 if getattr(sys, 'frozen', False):
-    # frozen
     dir_ = os.path.dirname(sys.executable)
 else:
-    # unfrozen
     dir_ = os.path.dirname(os.path.realpath(__file__))
+
+settingsFile = dir_ + '\\settings.ini'
+settingsJson = {}
+def load():
+    global settingsJson
+    with open(settingsFile) as json_file:
+        settingsJson = json.load(json_file)
 
 def center(row, text):
     con.draw_str(((conWidth/2)-(len(text)/2)), row, text)
@@ -74,31 +71,20 @@ def menu(row, options):
         answer %= len(options)
 
 def main():
-    con.clear()
-    correct = 0
-    center(15, 'Set first terms to Spanish or English?')
-    isSpanish = menu(25, ['Spanish', 'English'])
-    if isSpanish == 'Spanish':
-        isSpanish = True
+    if settingsJson['isSpanish']:
         questions = list(vocab)
     else:
-        isSpanish = False
         questions = list(vocab.values())
-    con.clear()
-    flush()
-    center(15, 'Randomize vocab?')
-    mix = menu(25, ['yes', 'no'])
-    if mix == 'yes':
+    if settingsJson['mix']:
         random.shuffle(questions)
-    con.clear()
-    flush()
+    correct = 0
     for i in questions:
         con.clear()
         center(15, i)
         flush()
         answer = inCenter(25)
         flush()
-        if isSpanish:
+        if settingsJson['isSpanish']:
             if answer == vocab[i]:
                 center(30, 'correct')
                 correct += 1
@@ -115,28 +101,65 @@ def main():
             k = tdl.event.key_wait()
             if k.key == "ENTER" or k.char == ' ':
                 break
-    center(30, 'you got ' + str(correct) + ' correct out of ' + str(len(vocab)))
+                con.clear()
     con.clear()
+    center(10, 'you got ' + str(correct) + ' correct out of ' + str(len(vocab)))
     center(15, 'practice again?')
     again = menu(25, ['yes', 'no'])
     flush()
     if again == 'yes':
         main()
     else:
-        os._exit(1)
+        start()
+def settings():
+    con.clear()
+    center(20, 'Spanish or English first?')
+    isSpanish = menu(25, ['Spanish', 'English'])
+    if isSpanish == 'Spanish':
+        settingsJson['isSpanish'] = True
+    else:
+        settingsJson['isSpanish'] = False
+    con.clear()
+    center(20, 'Enable voice control?')
+    voice = menu(25, ['yes', 'no'])
+    if voice == 'yes':
+        settingsJson['voice'] = True
+    else:
+        settingsJson['voice'] = False
+    con.clear()
+    center(20, 'Randomize vocab?')
+    mix = menu(25, ['yes', 'no'])
+    if mix == "yes":
+        settingsJson['mix'] = True
+    else:
+        settingsJson['mix'] = False
+
+    # Save to file
+    with open(settingsFile, 'w') as out:
+        json.dump(settingsJson, out)
+    start()
 def start():
-    center(25, "press ctrl+o to choose a voacb file")
+    global vocab
+    con.clear()
+    load()
+    center(20, "press ctrl+o to choose a voacb file")
+    center(25, "press ctrl+s to change settings")
+    center(30, "press ESC to close")
     flush()
     while 1:
         k = tdl.event.key_wait()
         if k.keychar == 'o' and k.control:
-            file = filedialog.askopenfilename(initialdir = os.path.realpath(dir_)+'/VocabLists', title = "Select vocab", filetypes = (("vocab files", '*.vocab'), ('json files', '*.json'), ('all files', '*.*')))
-
+            file = filedialog.askopenfilename(initialdir = os.path.realpath(dir_)+'/VocabLists',
+             title = "Select vocab", filetypes = (("vocab files", '*.vocab'), ('json files', '*.json'), ('all files', '*.*')))
             if file == '':
                 start()
             with open(file) as json_file:
                 vocab = json.load(json_file)
             main()
+        elif k.keychar == 's' and k.control:
+            settings()
+        elif k.key == 'ESCAPE':
+            os._exit(1)
 def isDead():
     threading.Timer(.01, isDead).start()
     if tdl.event.is_window_closed():
