@@ -1,4 +1,4 @@
-import tdl, threading, random, json, os, sys, numpy.core._methods, numpy.lib.format, tkinter as tk, speech_recognition as sr
+import tdl, threading, random, json, os, sys, numpy.core._methods, numpy.lib.format, tkinter as tk, speech_recognition as sr, urllib.request, io
 from tdl import flush
 from tkinter import filedialog
 root = tk.Tk()
@@ -155,12 +155,31 @@ def settings():
     with open(settingsFile, 'w') as out:
         json.dump(settingsJson, out)
     start()
+def workshop():
+    con.clear()
+    center(5, 'Enter a vocab file name')
+    flush()
+    fileToGet = inCenter(25)
+    try:
+        with urllib.request.urlopen("http://dhess.com/s/workshop/index.php?type=call&file="+fileToGet) as url:
+            data = json.loads(url.read().decode())
+            with io.FileIO('VocabLists/' + fileToGet + '.vocab', 'w') as fileToSave:
+                fileToSave.write(str(data).replace("'", '"').encode())
+
+            start()
+    except urllib.error.URLError:
+        con.clear()
+        center(15, 'Cannot connect to the internet')
+        flush()
+        k = tdl.event.key_wait()
+        start()
 def start():
     global vocab
     con.clear()
     load()
-    center(20, "press ctrl+o to choose a voacb file")
-    center(25, "press ctrl+s to change settings")
+    center(15, "press ctrl+o to choose a voacb file")
+    center(20, "press ctrl+s to change settings")
+    center(25, 'press ctrl+v to open the vocab manager')
     center(30, "press ESC to close")
     flush()
     while 1:
@@ -175,6 +194,8 @@ def start():
             main()
         elif k.keychar == 's' and k.control:
             settings()
+        elif k.keychar == 'v' and k.control:
+            workshop()
         elif k.key == 'ESCAPE':
             os._exit(1)
 def isDead():
